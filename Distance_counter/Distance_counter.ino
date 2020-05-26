@@ -2,6 +2,8 @@ const int inPing = 8;
 const int inEcho = 9;
 const int outPing = 6;
 const int outEcho = 7;
+const int redPin = 10;
+const int greenPin = 11;
 
 const int maxInactiveDist = 20;
 
@@ -15,7 +17,7 @@ unsigned long inTriggeredAt = 99999999999;
 unsigned long outTriggeredAt = 99999999999;
 
 int people = 0;
-int maxPeople = 50;
+int maxPeople = 3;
 
 bool atCapacity = false;
 
@@ -26,11 +28,51 @@ void setup()
   pinMode(inEcho, INPUT);
   pinMode(outPing, OUTPUT);
   pinMode(outEcho, INPUT);
-  
+  pinMode(redPin, OUTPUT);
 }
 
 void loop()
 {
+  checkPeople();
+  
+  updateLights();
+  
+  Serial.print("people: ");
+  Serial.print(people);
+  Serial.println();
+  
+  delay(100);
+}
+
+void updatePeople(int incrament) {
+  people += incrament;
+  if(people <= 0) {
+    people = 0;
+  }
+  if(people >= maxPeople) {
+    atCapacity = true;
+    Serial.print("at capacity");
+  } else {
+    atCapacity = false;
+  }
+  
+}
+
+long microsecondsToCentimeters(long microseconds) {
+   return microseconds / 29 / 2;
+}
+
+void updateLights() {
+  if(atCapacity == false) {
+    digitalWrite(greenPin, HIGH);
+    digitalWrite(redPin, LOW);
+  } else if(atCapacity == true) {
+     digitalWrite(greenPin, LOW); 
+     digitalWrite(redPin, HIGH);
+  }
+}
+
+void checkPeople() {
   getDist();
   if(inDist < maxInactiveDist) {
     if(inTriggered == false) {
@@ -49,13 +91,13 @@ void loop()
   if(inTriggered && outTriggered) {
     if(inTriggeredAt < outTriggeredAt) {
       Serial.print("going in");
-      people++;
+      updatePeople(1);
       Serial.println();
     }
 
     if(outTriggeredAt < inTriggeredAt) {
       Serial.print("going out");
-      people--;
+      updatePeople(-1);
       Serial.println();
     } 
     delay(1000);
@@ -71,29 +113,6 @@ void loop()
 //  Serial.print(outDist);
 //  Serial.println();
 //  
-
-  Serial.print("people: ");
-  Serial.print(people);
-  Serial.println();
-  
-  delay(100);
-}
-
-void updatePeople(int incrament) {
-  people += incrament;
-  if(people >= maxPeople) {
-    people = maxPeople;
-    atCapacity = true;
-  } else {
-    atCapacity = false;
-    if(people <= 0) {
-      people = 0;
-    }
-  }
-}
-
-long microsecondsToCentimeters(long microseconds) {
-   return microseconds / 29 / 2;
 }
 
 void getDist() {
