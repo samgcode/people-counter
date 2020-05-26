@@ -14,6 +14,11 @@ long inDist = 0;
 unsigned long inTriggeredAt = 99999999999;
 unsigned long outTriggeredAt = 99999999999;
 
+int people = 0;
+int maxPeople = 50;
+
+bool atCapacity = false;
+
 void setup()
 {
   Serial.begin(9600);
@@ -32,9 +37,6 @@ void loop()
       inTriggered = true;
       inTriggeredAt = millis();
     }
-  } else {
-//    inTriggered = false;
-    
   }
   
   if(outDist < maxInactiveDist) {
@@ -42,18 +44,18 @@ void loop()
      outTriggered = true;
      outTriggeredAt = millis(); 
     }
-  } else {
-    
   }
   
   if(inTriggered && outTriggered) {
     if(inTriggeredAt < outTriggeredAt) {
       Serial.print("going in");
+      people++;
       Serial.println();
     }
 
     if(outTriggeredAt < inTriggeredAt) {
       Serial.print("going out");
+      people--;
       Serial.println();
     } 
     delay(1000);
@@ -69,7 +71,25 @@ void loop()
 //  Serial.print(outDist);
 //  Serial.println();
 //  
+
+  Serial.print("people: ");
+  Serial.print(people);
+  Serial.println();
+  
   delay(100);
+}
+
+void updatePeople(int incrament) {
+  people += incrament;
+  if(people >= maxPeople) {
+    people = maxPeople;
+    atCapacity = true;
+  } else {
+    atCapacity = false;
+    if(people <= 0) {
+      people = 0;
+    }
+  }
 }
 
 long microsecondsToCentimeters(long microseconds) {
